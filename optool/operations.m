@@ -393,6 +393,31 @@ BOOL binaryHasLoadCommandForDylib(NSMutableData *binary, NSString *dylib, uint32
                 loadOffset = (unsigned int)binary.currentOffset;
                 break;
             }
+                
+            case LC_SEGMENT: {
+                struct segment_command command = *(struct segment_command *)(binary.bytes + binary.currentOffset);
+                if (strcmp(command.segname, "__RESTRICT") == 0) {
+                    printf("Found %s Segment...\n", command.segname);
+                    const char *replace_segname = "__DISABLED";
+                    [binary replaceBytesInRange:(NSRange){binary.currentOffset + sizeof(command.cmd) + sizeof(command.cmdsize), 10} withBytes:replace_segname];
+                    printf("Segment __RESTRICT disabled\n");
+                }
+                binary.currentOffset += size;
+                break;
+            }
+                
+            case LC_SEGMENT_64: {
+                struct segment_command_64 command = *(struct segment_command_64 *)(binary.bytes + binary.currentOffset);
+                if (strcmp(command.segname, "__RESTRICT") == 0) {
+                    printf("Found %s Segment...\n", command.segname);
+                    const char *replace_segname = "__DISABLED";
+                    [binary replaceBytesInRange:(NSRange){binary.currentOffset + sizeof(command.cmd) + sizeof(command.cmdsize), 10} withBytes:replace_segname];
+                    printf("Segment __RESTRICT disabled\n");
+                }
+                binary.currentOffset += size;
+                break;
+            }
+            
             default:
                 binary.currentOffset += size;
                 break;
